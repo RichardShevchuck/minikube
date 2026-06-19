@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-eks-deployment
+  namespace: k8s-eks
+  labels:
+    app: k8s-eks
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: k8s-eks-deployment
+  template:
+    metadata:
+      labels:
+        app: k8s-eks-deployment
+    spec:
+      containers:
+        - name: k8s-eks-container
+          image: 079975324514.dkr.ecr.eu-central-1.amazonaws.com/kubernetes:latest
+          ports:
+            - containerPort: 8000
