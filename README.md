@@ -1,6 +1,6 @@
 # Kubernetes Practice
 
-Two independent Kubernetes setups for hands-on learning — one for local Minikube and one for AWS EKS with ECR.
+Two independent Kubernetes setups for learning and experimentation.
 
 ## Structure
 
@@ -13,18 +13,22 @@ k8s-for-eks-with-ecr/     # AWS EKS + ECR practice
 
 ## k8s — Minikube
 
-Basic Kubernetes concepts: Namespace, Deployment, Service, ConfigMap with volume mount.
+Basic Kubernetes concepts: Deployment, Service, ConfigMap, Namespace.
+
+**Stack:** Minikube, nginx
 
 **What it deploys:**
-- `nginx` — 3 replicas
+- Custom namespace `k8s`
+- nginx Deployment — 3 replicas
 - ConfigMap — custom HTML page mounted into nginx at `/usr/share/nginx/html`
-- ClusterIP Service
+- Service — exposes nginx within the cluster
 
+**Files:**
 ```
 k8s/
 ├── namespace.yml
-├── configmap.yml     # Custom HTML served by nginx
-├── deployment.yml    # 3 replicas, mounts ConfigMap as volume
+├── configmap.yml
+├── deployment.yml
 └── service.yml
 ```
 
@@ -34,45 +38,33 @@ k8s/
 minikube start
 kubectl apply -f k8s/
 kubectl get pods -n k8s
-minikube service -n k8s nginx-service
 ```
 
 ---
 
 ## k8s-for-eks-with-ecr — AWS EKS + ECR
 
-Practice with a real EKS cluster pulling a private Docker image from ECR.
+Practice with a real EKS cluster pulling a Docker image from a private ECR repository.
+
+**Stack:** AWS EKS, AWS ECR, kubectl
 
 **What it deploys:**
-- 4 replicas of a custom image from ECR (`eu-central-1`)
-- LoadBalancer Service (provisions an AWS ELB)
+- Custom namespace `k8s-eks`
+- Deployment — 4 replicas of a custom Docker image from ECR (`eu-central-1`)
+- Service — LoadBalancer type (provisions an AWS ELB)
 
+**Files:**
 ```
 k8s-for-eks-with-ecr/
 ├── namespace.yml
-├── deployment.yml    # 4 replicas, image from private ECR
-└── service.yml       # LoadBalancer type
+├── deployment.yml
+└── service.yml
 ```
 
 **Deploy to EKS:**
 
 ```bash
-# Authenticate to ECR
-aws ecr get-login-password --region eu-central-1 | \
-  docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-central-1.amazonaws.com
-
-# Configure kubectl
 aws eks update-kubeconfig --region eu-central-1 --name <cluster-name>
-
-# Deploy
 kubectl apply -f k8s-for-eks-with-ecr/
-
-# Get LoadBalancer hostname
-kubectl get svc -n k8s-eks
+kubectl get svc -n k8s-eks   # get LoadBalancer external IP
 ```
-
-## Key Concepts
-
-- **ConfigMap as volume** — inject config files into pods without rebuilding images
-- **ECR image pull from EKS** — node IAM role grants ECR read access automatically
-- **LoadBalancer Service** — EKS provisions an AWS ELB automatically via cloud-controller-manager
